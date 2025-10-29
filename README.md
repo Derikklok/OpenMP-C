@@ -69,7 +69,68 @@ Runs in 4 threads
 
 ---
 
-## Learning Path
+#### `For_Loop_1.c` - Parallel For Loop with Iteration Distribution
+**What it does:**
+- Uses `#pragma omp parallel for` to parallelize a for loop
+- Distributes loop iterations (1 to 10) among available threads
+- Each thread executes different iterations simultaneously
+- Accumulates the sum of all iterations (1+2+3+...+10 = 55)
+
+**Key Concepts:**
+- `#pragma omp parallel for` - Combines parallel region creation with automatic loop iteration distribution
+- Loop iterations are automatically divided among threads
+- **Important:** Each thread executes one iteration at a time
+- Iterations are NOT guaranteed to execute in order (due to thread scheduling)
+
+**Build & Run:**
+```bash
+gcc -fopenmp For_Loop_1.c -o forloop
+./forloop
+```
+
+**Example Output:**
+```
+Iteration 2, executed by thread 1 
+Iteration 4, executed by thread 3
+Iteration 5, executed by thread 4
+Iteration 3, executed by thread 2
+Iteration 6, executed by thread 5
+Iteration 7, executed by thread 6
+Iteration 8, executed by thread 7 
+Iteration 9, executed by thread 8
+Iteration 1, executed by thread 0
+Iteration 10, executed by thread 9
+Total is        :-       55
+```
+
+**Detailed Explanation of Output:**
+
+| Aspect | Explanation |
+|--------|-------------|
+| **Order is Random** | Iterations don't execute in order (1,2,3...). You might see 2,4,5,3,6... This is because threads are scheduled independently by the OS |
+| **Different Threads** | Each iteration is handled by a different thread (thread 0 does iteration 1, thread 1 does iteration 2, etc.) |
+| **Thread IDs** | Threads are numbered from 0 to N-1 (0-indexed). With 10 threads: 0,1,2,3,4,5,6,7,8,9 |
+| **Loop Variable** | "Iteration %d" shows the loop variable value (i=1 to 10), NOT the execution order |
+| **Thread Assignment** | "executed by thread %d" shows which thread handles that particular iteration |
+| **Sum Calculation** | Each iteration adds its value to sum: 1+2+3+4+5+6+7+8+9+10 = 55 |
+| **Total Output** | The final sum appears after ALL iterations complete (synchronization happens automatically) |
+
+**How It Works Step-by-Step:**
+1. OpenMP creates 10 threads (by default, one per loop iteration or based on system)
+2. Each thread gets assigned one or more loop iterations
+3. Threads execute their iterations in parallel (not necessarily in order)
+4. Each thread prints its iteration number and thread ID
+5. All threads synchronize at the end of the loop (implicit barrier)
+6. Main thread prints the total sum
+
+**Why is the sum correct (55) despite random order?**
+- Even though iterations execute out of order, each iteration executes exactly ONCE
+- All values 1 through 10 are added to sum
+- Mathematical result is always the same: 1+2+3+...+10 = 55
+
+---
+
+
 
 1. **Start with `program.c`** - Understand basic parallel regions and thread identification
 2. **Then `settings.c`** - Learn to control thread count explicitly
