@@ -3,10 +3,12 @@
 
 int main()
 {
-    omp_set_num_threads(4);
+    omp_set_num_threads(20);
 #pragma omp parallel
     {
-        printf("Runs in 4 threads\n");
+        int id = omp_get_thread_num();
+        int n = omp_get_num_threads();
+        printf("Thread %d runs in %d Total Pool\n",id,n);
     }
     return 0;
 }
