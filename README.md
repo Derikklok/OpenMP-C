@@ -255,11 +255,72 @@ FINAL PHASE:
 
 ---
 
+#### `program_1.c` - Barrier Synchronization
+**What it does:**
+- Creates 4 threads that simulate different amounts of work
+- Uses `#pragma omp barrier` to synchronize all threads
+- Demonstrates thread waiting and synchronization points
+- Each thread has a different sleep time to simulate varied workloads
+
+**Key Concepts:**
+- `#pragma omp parallel num_threads(4)` - Creates exactly 4 threads
+- `Sleep()` - Simulates work by making threads wait for different durations
+- `#pragma omp barrier` - Creates a synchronization point where all threads must wait
+- Thread timing and coordination demonstration
+
+**Build & Run:**
+```bash
+gcc -fopenmp program_1.c -o barrier
+./barrier
+```
+
+**Expected Output:**
+```
+Thread 0: Starting work
+Thread 1: Starting work
+Thread 2: Starting work
+Thread 3: Starting work
+Thread 0: Finished work        (after 1 second)
+Thread 1: Finished work        (after 2 seconds)
+Thread 2: Finished work        (after 3 seconds)
+Thread 3: Finished work        (after 4 seconds)
+Thread 0: All threads have finished!
+Thread 1: All threads have finished!
+Thread 2: All threads have finished!
+Thread 3: All threads have finished!
+```
+
+**Backend Execution Timeline:**
+```
+Time(s) │ Thread 0   │ Thread 1   │ Thread 2   │ Thread 3
+────────┼───────────┼───────────┼───────────┼──────────
+   0    │ START     │ START     │ START     │ START
+   1    │ FINISH    │    ⋮      │    ⋮      │    ⋮
+        │ (WAIT)    │           │           │
+   2    │ (WAIT)    │ FINISH    │    ⋮      │    ⋮
+        │           │ (WAIT)    │           │
+   3    │ (WAIT)    │ (WAIT)    │ FINISH    │    ⋮
+        │           │           │ (WAIT)    │
+   4    │ (WAIT)    │ (WAIT)    │ (WAIT)    │ FINISH
+        │           │           │           │
+   4+   │ CONTINUE  │ CONTINUE  │ CONTINUE  │ CONTINUE
+```
+
+**Why Use Barriers?**
+1. **Data Dependency**: When later calculations need results from all threads
+2. **Coordination**: When all threads must complete a phase before moving on
+3. **Resource Management**: Ensure all resources are ready before proceeding
+4. **Synchronization**: Prevent race conditions in multi-phase algorithms
+
+**Real-World Analogy:**
+Think of a meeting point where friends agree to wait for everyone before entering a movie theater:
+- Fast friends (Thread 0, 1) arrive early but must wait
+- Slower friends (Thread 2, 3) take longer to arrive
+- Only when everyone arrives (barrier) does the group move forward
+- After the barrier, all friends (threads) move together
+
 ## Learning Path
 
-
-
-| Pragma | Purpose |
 |--------|---------|
 | `#pragma omp parallel` | Create a parallel region |
 | `#pragma omp for` | Parallelize a for loop |
