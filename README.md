@@ -130,13 +130,134 @@ Total is        :-       55
 
 ---
 
+### 3. **NP4C** - Finding Maximum Value with Critical Section
+
+#### `program.c` - Parallel Maximum Finder with Synchronization
+**What it does:**
+- Finds the maximum value in an array using 4 parallel threads
+- Uses `#pragma omp critical` to prevent data race conditions
+- Demonstrates thread synchronization and shared variable protection
+- Array: {4, 2, 3, 1, 5, 6, 7, 8, 9, 10} → Maximum: 10
+
+**Key Concepts:**
+- `#pragma omp parallel for num_threads(4)` - Creates exactly 4 threads and distributes loop iterations
+- `#pragma omp critical` - **CRITICAL SECTION**: Only one thread can execute this code block at a time
+- **RACE CONDITION**: Without critical section, multiple threads could read/write max simultaneously causing incorrect results
+- **SHARED VARIABLE**: `max` is shared among all threads and needs protection
+
+**Build & Run:**
+```bash
+gcc -fopenmp program.c -o np4
+./np4
+```
+
+**Expected Output:**
+```
+max = 10
+```
+
+---
+
+## **Backend Execution Logic - Step by Step**
+
+### **Without Critical Section (WRONG - Race Condition):**
+```
+Thread 0: Reads max=4, num_array[0]=4, 4>4? NO, doesn't update
+Thread 1: Reads max=4, num_array[1]=2, 2>4? NO, doesn't update
+Thread 2: Reads max=4, num_array[2]=3, 3>4? NO, doesn't update
+Thread 3: Reads max=4, num_array[3]=1, 1>4? NO, doesn't update
+Thread 0: Reads max=4, num_array[4]=5, 5>4? YES, sets max=5
+Thread 1: Reads max=5, num_array[5]=6, 6>5? YES, sets max=6 (BUT BOTH READ 4 FIRST!)
+  ↑ RACE CONDITION: Multiple threads access/modify max simultaneously
+```
+
+### **With Critical Section (CORRECT - Thread Safe):**
+```
+Timeline of Execution with 4 Threads:
+─────────────────────────────────────────────────────────────────────────
+
+INITIALIZATION PHASE:
+- max = num_array[0] = 4 (all threads share this value)
+- Array = {4, 2, 3, 1, 5, 6, 7, 8, 9, 10}
+- Loop iterations 0-9 divided among 4 threads
+  - Thread 0: indices 0, 4, 8      (elements: 4, 5, 9)
+  - Thread 1: indices 1, 5, 9      (elements: 2, 6, 10)
+  - Thread 2: indices 2, 6         (elements: 3, 7)
+  - Thread 3: indices 3, 7         (elements: 1, 8)
+
+PARALLEL EXECUTION (Order can vary, but critical ensures one at a time):
+
+Step 1 - Thread 0 enters critical section:
+  Reads max=4, compares with num_array[0]=4 → 4>4? NO, skip
+  Exits critical section
+
+Step 2 - Thread 1 enters critical section:
+  Reads max=4, compares with num_array[1]=2 → 2>4? NO, skip
+  Exits critical section
+
+Step 3 - Thread 2 enters critical section:
+  Reads max=4, compares with num_array[2]=3 → 3>4? NO, skip
+  Exits critical section
+
+Step 4 - Thread 3 enters critical section:
+  Reads max=4, compares with num_array[3]=1 → 1>4? NO, skip
+  Exits critical section
+
+Step 5 - Thread 0 enters critical section (re-enters for iteration 4):
+  Reads max=4, compares with num_array[4]=5 → 5>4? YES
+  Updates max = 5
+  Exits critical section
+
+Step 6 - Thread 1 enters critical section (for iteration 5):
+  Reads max=5, compares with num_array[5]=6 → 6>5? YES
+  Updates max = 6
+  Exits critical section
+
+Step 7 - Thread 2 enters critical section (for iteration 6):
+  Reads max=6, compares with num_array[6]=7 → 7>6? YES
+  Updates max = 7
+  Exits critical section
+
+Step 8 - Thread 3 enters critical section (for iteration 7):
+  Reads max=7, compares with num_array[7]=8 → 8>7? YES
+  Updates max = 8
+  Exits critical section
+
+Step 9 - Thread 0 enters critical section (for iteration 8):
+  Reads max=8, compares with num_array[8]=9 → 9>8? YES
+  Updates max = 9
+  Exits critical section
+
+Step 10 - Thread 1 enters critical section (for iteration 9):
+  Reads max=9, compares with num_array[9]=10 → 10>9? YES
+  Updates max = 10
+  Exits critical section
+
+SYNCHRONIZATION BARRIER (Implicit at end of parallel for):
+- All threads wait here until every thread completes
+- Ensures main thread doesn't print result before all comparisons done
+
+FINAL PHASE:
+- Main thread continues
+- Prints: max = 10 ✓ (Correct answer!)
+```
+
+---
+
+## **Why Critical Section is Essential:**
+
+| Without Critical | With Critical |
+|-----------------|---------------|
+| ❌ Multiple threads read old max value before update | ✅ Each thread reads latest max value |
+| ❌ Multiple threads write max simultaneously (lost updates) | ✅ Only one thread writes at a time |
+| ❌ Result might be incorrect (e.g., 7 instead of 10) | ✅ Result is always correct |
+| ❌ Unpredictable behavior (changes each run) | ✅ Consistent, deterministic output |
+
+---
+
+## Learning Path
 
 
-1. **Start with `program.c`** - Understand basic parallel regions and thread identification
-2. **Then `settings.c`** - Learn to control thread count explicitly
-3. **Next steps** - Explore work-sharing constructs (for loops, sections), synchronization, and data sharing
-
-## Useful OpenMP Pragmas Reference
 
 | Pragma | Purpose |
 |--------|---------|
