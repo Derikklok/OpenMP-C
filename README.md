@@ -330,6 +330,49 @@ Think of a meeting point where friends agree to wait for everyone before enterin
 
 ## Compilation Tips
 
+### OpenMP Programs
 - Always compile with `-fopenmp` flag (GCC/Clang)
 - On MSVC: `/openmp` flag
 - Set thread count via `OMP_NUM_THREADS` environment variable before running
+
+### MPI Programs (Message Passing Interface)
+
+#### Setup Instructions for Windows:
+1. **Download and Install Microsoft MPI**:
+   - Download both files from Microsoft MPI website:
+     - MS-MPI Runtime (msmpisetup.exe)
+     - MS-MPI SDK (msmpisdk.msi)
+   - Install both packages
+
+2. **Environment Setup**:
+   - Add MPI to your system PATH:
+     ```
+     C:\Program Files\Microsoft MPI\Bin
+     C:\Program Files (x86)\Microsoft SDKs\MPI
+     ```
+
+#### Running MPI Programs:
+
+**Compilation**:
+```powershell
+# Using GCC with MPICH:
+mpicc program.c -o program
+
+# Using Microsoft Visual Studio:
+cl program.c /I"C:\Program Files (x86)\Microsoft SDKs\MPI\Include" /link /LIBPATH:"C:\Program Files (x86)\Microsoft SDKs\MPI\Lib\x64" msmpi.lib
+```
+
+**Execution**:
+```powershell
+# Run with 4 processes:
+mpiexec -n 4 ./program
+
+# Run with different number of processes:
+mpiexec -n 8 ./program  # 8 processes
+```
+
+#### MPI vs OpenMP:
+- **OpenMP**: Shared memory parallelism (threads share memory)
+- **MPI**: Distributed memory parallelism (processes have separate memory)
+- **OpenMP**: Single machine, multiple threads
+- **MPI**: Can run across multiple machines/nodes
